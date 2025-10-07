@@ -1,0 +1,30 @@
+#!/bin/bash
+
+fzf_args=(
+  --multi
+  --preview 'flatpak info {1} 2>/dev/null'
+  --preview-label='alt-p: toggle description, alt-j/k: scroll, tab: multi-select, F11: maximize'
+  --preview-label-pos='bottom'
+  --preview-window 'down:65%:wrap'
+  --bind 'alt-p:toggle-preview'
+  --bind 'alt-d:preview-half-page-down,alt-u:preview-half-page-up'
+  --bind 'alt-k:preview-up,alt-j:preview-down'
+  --color 'pointer:red,marker:red'
+)
+
+pkg_names=$(flatpak list --app --columns=application | fzf "${fzf_args[@]}")
+
+if [[ -n "$pkg_names" ]]; then
+  # Exit fzf's interface first so Flatpak can print progress normally
+  tput rmcup
+
+  # Uninstall selected apps with data
+  flatpak uninstall -y --delete-data $pkg_names
+
+  # Remove unused runtimes
+  flatpak uninstall -y --unused
+
+  # Show completion
+  omarchy-show-done
+fi
+
